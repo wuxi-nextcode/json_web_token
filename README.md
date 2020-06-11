@@ -17,7 +17,7 @@ To be able to install this gem you will have to generate a username/password "de
 Then add authentication to bundler config (locally or in your Dockerfile), using the username/password from the "deploy token":
 
     $ bundle config https://gitlab.com/wuxi-nextcode/cla/json_web_token.git "${USERNAME}:${PASSWORD}"
-
+    
 And then you can execute:
 
     $ bundle
@@ -33,8 +33,6 @@ JsonWebToken.configure do |config|
   config.client_id = KeyCloakHelper.client_id
   config.default_audience = KeyCloakHelper.default_audience
 end
-```    
-```ruby
 ```
 
 You can decode and view token headers with:
