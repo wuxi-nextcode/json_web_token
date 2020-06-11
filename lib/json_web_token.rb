@@ -1,5 +1,6 @@
 require "json_web_token/version"
 require "json_web_token/configuration"
+require "jwt"
 
 module JsonWebToken
   class Error < StandardError; end
