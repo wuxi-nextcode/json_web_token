@@ -53,7 +53,7 @@ Where
 * `public_key`: the public key used to encode token
 * `verify`: can be set to false to view token payload unverified (defaults to true when omitted)
 
-It's up to the application using this gem to handle fetching the public key from the authentication server and passing into the payload function. It's recommended to use both the alg and kid values from the token and fetch a certificate from the authentication server (or used a cached one) based on those values. An example of a code that deos this is
+It's up to the application using this gem to handle fetching the public key from the authentication server and passing into the payload function. It's recommended to use both the `alg` and `kid` values from the token and fetch a certificate from the authentication server (or used a cached one) based on those values. An example of a code that deos this can be seen below:
 ```ruby
 def self.public_key token
   cached_public_key(JsonWebToken.header(token)) || new_public_key(JsonWebToken.header(token))
