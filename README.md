@@ -53,41 +53,43 @@ Where
 * `public_key`: the public key used to encode token
 * `verify`: can be set to false to view token payload unverified (defaults to true when omitted)
 
-It's up to the application using this gem to handle fetching the public key from the authentication server and passing into the payload function. It's recommended to use both the `alg` and `kid` values from the token and fetch a certificate from the authentication server (or used a cached one) based on those values. An example of a code that deos this can be seen below:
+It's up to the application using this gem to handle fetching the public key from the authentication server and passing into the payload function. It's recommended to use both the `alg` and `kid` values from the token header and fetch a certificate from the authentication server (or used a cached one) based on those values. An example of a code that deos this can be seen below:
 ```ruby
-def self.public_key token
-  cached_public_key(JsonWebToken.header(token)) || new_public_key(JsonWebToken.header(token))
-end
-
-private
-
-def self.redis_public_key_key token_header
-  "KeyCloak:PublicKeys:#{token_header['alg']}:#{token_header['kid']}"
-end
-
-def self.update_public_key_cache token_header, new_pub_key
-    redis_key = redis_public_key_key token_header
-    RedisPool.with do |redis|
-      redis.setex(redis_key, 24.hours.seconds.to_i, new_pub_key.to_json)
+class KeyCloakHelper
+    def self.public_key token
+      cached_public_key(JsonWebToken.header(token)) || new_public_key(JsonWebToken.header(token))
     end
-    Rails.logger.info("KeyCloakHelper Redis: STORED #{redis_key}")
-end
-
-def self.cached_public_key token_header
-    res = RedisPool.with do |redis|
-      redis.get(redis_public_key_key(token_header))
+    
+    private
+    
+    def self.redis_public_key_key token_header
+      "KeyCloak:PublicKeys:#{token_header['alg']}:#{token_header['kid']}"
     end
-    Rails.logger.info("KeyCloakHelper Redis: GET #{redis_public_key_key(token_header)}")
-    JSON.parse(res)
+    
+    def self.update_public_key_cache token_header, new_pub_key
+        redis_key = redis_public_key_key token_header
+        RedisPool.with do |redis|
+          redis.setex(redis_key, 24.hours.seconds.to_i, new_pub_key.to_json)
+        end
+        Rails.logger.info("KeyCloakHelper Redis: STORED #{redis_key}")
+    end
+    
+    def self.cached_public_key token_header
+        res = RedisPool.with do |redis|
+          redis.get(redis_public_key_key(token_header))
+        end
+        Rails.logger.info("KeyCloakHelper Redis: GET #{redis_public_key_key(token_header)}")
+        JSON.parse(res)
+    end
+    
+    def self.new_public_key token_header
+        Rails.logger.info("KeyCloakHelper: requesting new public key for #{token_header['alg']}:#{token_header['kid']}")
+        new_pub_key = certificates_from_keycloak.detect { |cert| cert['alg'] == token_header['alg'] && cert['kid'] == token_header['kid'] }
+        raise "Keycloak service does not provide a public key for #{token_header['alg']}:#{token_header['kid']} as required" if new_pub_key.nil?
+        update_public_key_cache token_header, new_pub_key
+        new_pub_key
+    end
 end
-
-def self.new_public_key token_header
-    Rails.logger.info("KeyCloakHelper: requesting new public key for #{token_header['alg']}:#{token_header['kid']}")
-    new_pub_key = certificates_from_keycloak.detect { |cert| cert['alg'] == token_header['alg'] && cert['kid'] == token_header['kid'] }
-    raise "Keycloak service does not provide a public key for #{token_header['alg']}:#{token_header['kid']} as required" if new_pub_key.nil?
-    update_public_key_cache token_header, new_pub_key
-    new_pub_key
-end 
 ```
 
 ## Development
