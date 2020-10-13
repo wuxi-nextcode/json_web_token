@@ -1,6 +1,7 @@
 require "json_web_token/version"
 require "json_web_token/configuration"
 require "jwt"
+require 'json/jwk'
 
 module JsonWebToken
 
