@@ -1,5 +1,7 @@
 require "json_web_token/version"
 require "json_web_token/configuration"
+require "json_web_token/jwt_access_token"
+require "json_web_token/keycloak_helper"
 require "jwt"
 require "json/jwt"
 
