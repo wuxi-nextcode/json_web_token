@@ -1,4 +1,5 @@
 require 'ostruct'
+require 'http'
 
 module KeycloakHelper
   def self.config= config
